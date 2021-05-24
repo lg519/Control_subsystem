@@ -51,9 +51,9 @@ void loop() {
     receive_data_Drive();
     update_JSON_obj_Drive(JSON_Drive_to_Control); 
 
-    POST_data_Server(JSON_Drive_to_Control);
+    POST_data_Server(JSON_Drive_to_Control, JSON_Control_to_Drive);
 
-    send_data_Drive();
+    send_data_Drive(JSON_Control_to_Drive);
 
 }
 
@@ -72,7 +72,8 @@ void receive_data_Drive() {
 
         incoming_byte = Serial2.read();
 
-        if (recvInProgress_Drive == true) {
+        if (recvInProgress_Drive == true) 
+        {
             if (incoming_byte != endMarker) {
                 receivedChars_Drive[index_Drive] = incoming_byte;
                 index_Drive++;
@@ -83,8 +84,8 @@ void receive_data_Drive() {
                 newData_Drive = true;
             }
         }
-
-        else if (incoming_byte == startMarker) {
+        else if (incoming_byte == startMarker) 
+        {
             recvInProgress_Drive = true;
         }
     }
@@ -120,11 +121,11 @@ void update_JSON_obj_Drive(JsonDocument& JSON_Drive_to_Control) {
     }
 }
 
-JsonDocument& POST_data_Server(JsonDocument& JSON_Drive_to_Control) {
+void POST_data_Server(JsonDocument& JSON_Drive_to_Control, JsonDocument& JSON_Control_to_Drive) {
     
     //Check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED){
-
+    if(WiFi.status()== WL_CONNECTED)
+    {
         HTTPClient http;
         String serverPath = serverName;
 
@@ -141,13 +142,41 @@ JsonDocument& POST_data_Server(JsonDocument& JSON_Drive_to_Control) {
         Serial.print("HTTP Response code: ");
         Serial.println(httpResponseCode);
 
-        // Read response
+
+        // Read response 
         Serial.print(http.getString());
+
+        DeserializationError error = deserializeJson(JSON_Control_to_Drive, http.getStream());
+
+        if (error) {
+        Serial.print(F("deserializeJson() failed: "));
+        Serial.println(error.f_str());
+        }
 
         // Free resources
         http.end();
     }
-    else{
+    else
+    {
         Serial.println("WiFi Disconnected");
     }   
+}
+
+void send_data_Drive(JsonDocument& JSON_Control_to_Drive) 
+{
+    if (!JSON_Control_to_Drive.isNull()) 
+    {
+        //extract values from JSON document
+        uint8_t x_coordinate = JSON_Control_to_Drive["x_coordinate"]; 
+        uint8_t y_coordinate = JSON_Control_to_Drive["y_coordinate"];
+
+        Serial2.write('{');
+        Serial2.write(x_coordinate); 
+        Serial2.write(y_coordinate);
+        Serial2.write('}');
+    }
+    else
+    {
+        Serial.println("error: JSON_Control_to_Drive is Null");
+    }
 }
