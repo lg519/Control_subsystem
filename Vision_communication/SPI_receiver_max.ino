@@ -11,7 +11,7 @@ void setup() {
   Serial.begin(115200);
   
   // start the SPI library:
-  pinMode(ss, OUTPUT); //ss is pin 10
+  pinMode(ss, OUTPUT); 
   SPI.begin();
   SPI.setClockDivider(SPI_CLOCK_DIV4);
   digitalWrite(ss,HIGH);
