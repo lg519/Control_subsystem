@@ -16,9 +16,6 @@ const char* password = "o9O)5498";
 String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/rover_test";
 
 
-unsigned long lastTime = 0;
-unsigned long timerDelay = 5000;
-
 void setup() {
 
     //Debug communication UART port
@@ -45,8 +42,8 @@ void setup() {
 void loop() {
 
 
-    StaticJsonDocument<384> JSON_Drive_to_Control;
-    StaticJsonDocument<96> JSON_Control_to_Drive;
+    StaticJsonDocument<96> JSON_Drive_to_Control;
+    StaticJsonDocument<32> JSON_Control_to_Drive;
 
     receive_data_Drive();
     update_JSON_obj_Drive(JSON_Drive_to_Control); 
