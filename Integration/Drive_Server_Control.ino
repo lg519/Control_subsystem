@@ -13,7 +13,7 @@ bool newData_Drive = false;
 //Server_communication setup
 const char* ssid = "DESKTOP-SIM2NC1 1364";
 const char* password = "o9O)5498";
-String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/rover_test";
+String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/api/rover_data";
 
 
 void setup() {
@@ -38,12 +38,11 @@ void setup() {
     Serial.println(WiFi.localIP());
 }
 
-
 void loop() {
 
 
     StaticJsonDocument<96> JSON_Drive_to_Control;
-    StaticJsonDocument<32> JSON_Control_to_Drive;
+    StaticJsonDocument<96> JSON_Control_to_Drive;
 
     receive_data_Drive();
     update_JSON_obj_Drive(JSON_Drive_to_Control); 
@@ -54,8 +53,6 @@ void loop() {
 
 }
 
-
-
 void receive_data_Drive() {
     static bool recvInProgress_Drive = false;
     static byte index_Drive = 0;
@@ -64,55 +61,54 @@ void receive_data_Drive() {
     char incoming_byte;
 
     
- 
-    while (Serial2.available() > 0 && newData_Drive == false) {
-
-        incoming_byte = Serial2.read();
-
-        if (recvInProgress_Drive == true) 
+    while(true)
+    {
+        while (Serial2.available() > 0 && newData_Drive == false) 
         {
-            if (incoming_byte != endMarker) {
-                receivedChars_Drive[index_Drive] = incoming_byte;
-                index_Drive++;
+            incoming_byte = Serial2.read();
+
+            if (recvInProgress_Drive == true) 
+            {
+                if (incoming_byte != endMarker) {
+                    receivedChars_Drive[index_Drive] = incoming_byte;
+                    index_Drive++;
+                }
+                else {
+                    recvInProgress_Drive = false;
+                    index_Drive = 0;
+                    newData_Drive = true;
+                    return;
+                }
             }
-            else {
-                recvInProgress_Drive = false;
-                index_Drive = 0;
-                newData_Drive = true;
+            else if (incoming_byte == startMarker) 
+            {
+                recvInProgress_Drive = true;
             }
-        }
-        else if (incoming_byte == startMarker) 
-        {
-            recvInProgress_Drive = true;
         }
     }
 }
 
-
 void update_JSON_obj_Drive(JsonDocument& JSON_Drive_to_Control) {
     if (newData_Drive == true) {
         
-        uint8_t x_coordinate = receivedChars_Drive[2];
-        uint8_t y_coordinate = receivedChars_Drive[1];
-        uint8_t theta = receivedChars_Drive[0];
+        uint8_t delta_x = receivedChars_Drive[2];
+        uint8_t delta_y = receivedChars_Drive[1];
+        uint8_t delta_theta = receivedChars_Drive[0];
 
 
-        //Serial.println("data received from Drive");
-        //Serial.print("movement_id is: ");
-        //Serial.println(movement_id);
-        //Serial.print("delta_x is: ");
-        //Serial.println(delta_x);
-        //Serial.print("delta_y is: ");
-        //Serial.println(delta_y);
-        //Serial.print("delta_theta is: ");
-        //Serial.println(delta_theta);
-        //Serial.print("speed_ is: ");
-        //Serial.println(speed_);
+        Serial.println("data received from Drive");
+        Serial.print("delta_x is: ");
+        Serial.println(delta_x);
+        Serial.print("delta_y is: ");
+        Serial.println(delta_y);
+        Serial.print("delta_theta is: ");
+        Serial.println(delta_theta);
+        
 
 
-        JSON_Drive_to_Control["x_coordinate"] = x_coordinate;
-        JSON_Drive_to_Control["y_coordinate"] = y_coordinate;
-        JSON_Drive_to_Control["theta"] = theta;
+        JSON_Drive_to_Control["delta_x"] = delta_x;
+        JSON_Drive_to_Control["delta_y"] = delta_y;
+        JSON_Drive_to_Control["delta_theta"] = delta_theta;
 
         newData_Drive = false;
     }
@@ -164,12 +160,19 @@ void send_data_Drive(JsonDocument& JSON_Control_to_Drive)
     if (!JSON_Control_to_Drive.isNull()) 
     {
         //extract values from JSON document
-        uint8_t x_coordinate = JSON_Control_to_Drive["x_coordinate"]; 
-        uint8_t y_coordinate = JSON_Control_to_Drive["y_coordinate"];
+        uint8_t delta_x = JSON_Control_to_Drive["delta_x"]; 
+        uint8_t delta_y = JSON_Control_to_Drive["delta_y"];
+
+        Serial.println("data received from Server");
+        Serial.print("delta_x is: ");
+        Serial.println(delta_x);
+        Serial.print("delta_y is: ");
+        Serial.println(delta_y);
+        
 
         Serial2.write('{');
-        Serial2.write(x_coordinate); 
-        Serial2.write(y_coordinate);
+        Serial2.write(delta_x); 
+        Serial2.write(delta_y);
         Serial2.write('}');
     }
     else
