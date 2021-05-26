@@ -41,15 +41,15 @@ void setup() {
 void loop() {
 
 
-    StaticJsonDocument<96> JSON_Drive_to_Control;
-    StaticJsonDocument<96> JSON_Control_to_Drive;
+    StaticJsonDocument<96> JSON_Drive_to_Server;
+    StaticJsonDocument<96> JSON_Server_to_Drive;
 
     receive_data_Drive();
-    update_JSON_obj_Drive(JSON_Drive_to_Control); 
+    update_JSON_obj_Drive(JSON_Drive_to_Server); 
 
-    POST_data_Server(JSON_Drive_to_Control, JSON_Control_to_Drive);
+    POST_data_Server(JSON_Drive_to_Server, JSON_Server_to_Drive);
 
-    send_data_Drive(JSON_Control_to_Drive);
+    send_data_Drive(JSON_Server_to_Drive);
 
 }
 
@@ -88,7 +88,7 @@ void receive_data_Drive() {
     }
 }
 
-void update_JSON_obj_Drive(JsonDocument& JSON_Drive_to_Control) {
+void update_JSON_obj_Drive(JsonDocument& JSON_Drive_to_Server) {
     if (newData_Drive == true) {
         
         uint8_t delta_x = receivedChars_Drive[2];
@@ -106,15 +106,15 @@ void update_JSON_obj_Drive(JsonDocument& JSON_Drive_to_Control) {
         
 
 
-        JSON_Drive_to_Control["delta_x"] = delta_x;
-        JSON_Drive_to_Control["delta_y"] = delta_y;
-        JSON_Drive_to_Control["delta_theta"] = delta_theta;
+        JSON_Drive_to_Server["delta_x"] = delta_x;
+        JSON_Drive_to_Server["delta_y"] = delta_y;
+        JSON_Drive_to_Server["delta_theta"] = delta_theta;
 
         newData_Drive = false;
     }
 }
 
-void POST_data_Server(JsonDocument& JSON_Drive_to_Control, JsonDocument& JSON_Control_to_Drive) {
+void POST_data_Server(JsonDocument& JSON_Drive_to_Server, JsonDocument& JSON_Server_to_Drive) {
     
     //Check WiFi connection status
     if(WiFi.status()== WL_CONNECTED)
@@ -129,7 +129,7 @@ void POST_data_Server(JsonDocument& JSON_Drive_to_Control, JsonDocument& JSON_Co
     
         // Send HTTP POST request
         String json;
-        serializeJson(JSON_Drive_to_Control, json);
+        serializeJson(JSON_Drive_to_Server, json);
         int httpResponseCode = http.POST(json);
 
         Serial.print("HTTP Response code: ");
@@ -137,9 +137,9 @@ void POST_data_Server(JsonDocument& JSON_Drive_to_Control, JsonDocument& JSON_Co
 
 
         // Read response 
-        Serial.print(http.getString());
+        //Serial.print(http.getString());
 
-        DeserializationError error = deserializeJson(JSON_Control_to_Drive, http.getStream());
+        DeserializationError error = deserializeJson(JSON_Server_to_Drive, http.getStream());
 
         if (error) {
         Serial.print(F("deserializeJson() failed: "));
@@ -155,13 +155,13 @@ void POST_data_Server(JsonDocument& JSON_Drive_to_Control, JsonDocument& JSON_Co
     }   
 }
 
-void send_data_Drive(JsonDocument& JSON_Control_to_Drive) 
+void send_data_Drive(JsonDocument& JSON_Server_to_Drive) 
 {
-    if (!JSON_Control_to_Drive.isNull()) 
+    if (!JSON_Server_to_Drive.isNull()) 
     {
         //extract values from JSON document
-        uint8_t delta_x = JSON_Control_to_Drive["delta_x"]; 
-        uint8_t delta_y = JSON_Control_to_Drive["delta_y"];
+        uint8_t delta_x = JSON_Server_to_Drive["delta_x"]; 
+        uint8_t delta_y = JSON_Server_to_Drive["delta_y"];
 
         Serial.println("data received from Server");
         Serial.print("delta_x is: ");
@@ -177,6 +177,6 @@ void send_data_Drive(JsonDocument& JSON_Control_to_Drive)
     }
     else
     {
-        Serial.println("error: JSON_Control_to_Drive is Null");
+        Serial.println("error: JSON_Server_to_Drive is Null");
     }
 }
