@@ -90,8 +90,10 @@ void update_JSON_obj_Vision(JsonDocument &JSON_Vision_to_Server)
 {
     JsonArray Vision_data = JSON_Vision_to_Server.createNestedArray("Vision_data");
 
+
     for (int i = 0; i < 3*5; i += 3)
     {
+        if(receivedChars_Vision[i + 2]<=receivedChars_Vision[i + 1]) continue;
         JsonObject triplet = Vision_data.createNestedObject();
         triplet["colour"] = receivedChars_Vision[i];
         triplet["x_min"] = receivedChars_Vision[i + 1];
@@ -100,23 +102,23 @@ void update_JSON_obj_Vision(JsonDocument &JSON_Vision_to_Server)
 
     Serial.println("data received from Vision: ");
 
-    for (int i = 0; i < 15 ; i++)
-    {
-        Serial.println(receivedChars_Vision[i]);
-    }
-    
-    for (int i = 0; i < 15 ; i++)
-    {
-      receivedChars_Vision[i]=0;
-    }
-
-    // for (JsonObject elem : JSON_Vision_to_Server["Vision_data"].as<JsonArray>())
+    // for (int i = 0; i < 15 ; i++)
     // {
-    //     uint8_t coulor = elem["coulor"];
-    //     uint8_t x_min = elem["x_min"];
-    //     uint8_t x_max = elem["x_max"];
-    //     Serial.println(coulor);
-    //     Serial.println(x_min);
-    //     Serial.println(x_max);
+    //     Serial.println(receivedChars_Vision[i]);
     // }
+
+    // for (int i = 0; i < 15 ; i++)
+    // {
+    //   receivedChars_Vision[i]=0;
+    // }
+
+    for (JsonObject elem : JSON_Vision_to_Server["Vision_data"].as<JsonArray>())
+    {
+        uint8_t colour = elem["colour"];
+        uint8_t x_min = elem["x_min"];
+        uint8_t x_max = elem["x_max"];
+        Serial.println((int)colour);
+        Serial.println((int)x_min);
+        Serial.println((int)x_max);
+    }
 }
