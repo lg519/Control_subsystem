@@ -13,11 +13,7 @@ bool newData_Drive = false;
 //Server_communication setup
 const char* ssid = "DESKTOP-SIM2NC1 1364";
 const char* password = "o9O)5498";
-
-//const char* ssid = "max";
-//const char* password = "12345678";
 String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/api/rover_data";
-//String serverName = "http://10.42.0.1:5000/rover_data";
 
 //SPI settings
 int ss = 14;
