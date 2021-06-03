@@ -131,7 +131,7 @@ void receive_bytes_Vision()
     {
         while (Serial2.available() > 0) 
         {
-            incoming_byte = SPI.transfer(0);
+            received_byte = SPI.transfer(0);
             //discard bytes until SOM is encounterd
             if (received_byte == SOM) 
             {
@@ -174,15 +174,15 @@ void update_JSON_obj_Vision(JsonDocument &JSON_Rover_to_Server)
     {
         JsonObject triplet = Vision_data.createNestedObject();
         triplet["colour"] = "red";
-        triplet["theta"] = receivedChars_Vision[i + 1];
-        triplet["depth"] = receivedChars_Vision[i + 2];
+        triplet["theta"] = receivedData_Vision[i + 1];
+        triplet["depth"] = receivedData_Vision[i + 2];
     }
 
     JsonArray depth = JSON_Rover_to_Server.createNestedArray("depth");
     
     for (int i = 15; i < 95; i++)
     {
-        depth.add(receivedChars_Vision[i]);
+        depth.add(receivedData_Vision[i]);
     }
 
 }
@@ -202,13 +202,13 @@ void POST_data_Server(JsonDocument& JSON_Rover_to_Server, JsonDocument& JSON_Ser
     
         // Send HTTP POST request
         String json;
-        serializeJson(JSON_Drive_to_Server, json);
+        serializeJson(JSON_Rover_to_Server, json);
         int httpResponseCode = http.POST(json);
 
         Serial.print("HTTP Response code: ");
         Serial.println(httpResponseCode);
 
-        DeserializationError error = deserializeJson(JSON_Server_to_Drive, http.getStream());
+        DeserializationError error = deserializeJson(JSON_Server_to_Rover, http.getStream());
 
         if (error) {
         Serial.print(F("deserializeJson() failed: "));
@@ -224,13 +224,13 @@ void POST_data_Server(JsonDocument& JSON_Rover_to_Server, JsonDocument& JSON_Ser
     }   
 }
 
-void send_data_Drive(JsonDocument& JSON_Server_to_Drive) 
+void send_data_Drive(JsonDocument& JSON_Server_to_Rover) 
 {
-    if (!JSON_Server_to_Drive.isNull()) 
+    if (!JSON_Server_to_Rover.isNull()) 
     {
         //extract values from JSON document
-        uint8_t delta_x = JSON_Server_to_Drive["delta_x"]; 
-        uint8_t delta_y = JSON_Server_to_Drive["delta_y"];
+        uint8_t delta_x = JSON_Server_to_Rover["delta_x"]; 
+        uint8_t delta_y = JSON_Server_to_Rover["delta_y"];
 
         Serial.println("data received from Server");
         Serial.print("delta_x is: ");
@@ -246,6 +246,7 @@ void send_data_Drive(JsonDocument& JSON_Server_to_Drive)
     }
     else
     {
-        Serial.println("error: JSON_Server_to_Drive is Null");
+        Serial.println("error: JSON_Server_to_Rover is Null");
     }
 }
+
