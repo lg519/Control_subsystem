@@ -8,9 +8,14 @@
 char receivedData_Drive[3];
 
 //Server_communication setup
-const char* ssid = "DESKTOP-SIM2NC1 1364";
-const char* password = "o9O)5498";
-String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/api/rover_data";
+//const char *ssid = "DESKTOP-SIM2NC1 1364";
+//const char *password = "o9O)5498";
+//String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/api/rover_data";
+
+const char *ssid = "max";
+const char *password = "12345678";
+String serverName = "http://10.42.0.1:5000/rover_data";
+
 
 //SPI settings
 int ss = 14;
@@ -19,7 +24,11 @@ SPISettings settingsA(2000000, LSBFIRST, SPI_MODE1);
 //Vision_communication setup
 char receivedData_Vision[3 * 5 + 80]; //recive 5 triplets and 80 bytes array { colour, x_min, x_max; + ...
 
-void setup() {
+//Energy_communication setup
+char receivedData_Energy[3];
+
+void setup()
+{
 
     //Debug communication UART port
     Serial.begin(115200);
@@ -35,7 +44,8 @@ void setup() {
     WiFi.begin(ssid, password);
     Serial.println("Connecting");
 
-    while(WiFi.status() != WL_CONNECTED) {
+    while (WiFi.status() != WL_CONNECTED)
+    {
         delay(500);
         Serial.print(".");
     }
@@ -45,13 +55,14 @@ void setup() {
     Serial.println(WiFi.localIP());
 }
 
-void loop() {
+void loop()
+{
 
-    StaticJsonDocument<608> JSON_Rover_to_Server;
+    StaticJsonDocument<2048> JSON_Rover_to_Server;
     StaticJsonDocument<96> JSON_Server_to_Rover;
 
-    receive_data_Drive();
-    update_JSON_obj_Drive(JSON_Rover_to_Server); 
+    //receive_data_Drive();
+    update_JSON_obj_Drive(JSON_Rover_to_Server);
 
     receive_data_Vision();
     update_JSON_obj_Vision(JSON_Rover_to_Server);
@@ -61,27 +72,28 @@ void loop() {
     send_data_Drive(JSON_Server_to_Rover);
 }
 
-void receive_data_Drive() {
+void receive_data_Drive()
+{
     static bool recvInProgress_Drive = false;
     static byte counter_Drive = 0;
     char SOM = '{';
     char EOM = '}';
     char received_byte;
 
-    while(true)
+    while (true)
     {
-        while (Serial2.available() > 0) 
+        while (Serial2.available() > 0)
         {
             received_byte = Serial2.read();
             //discard bytes until SOM is encounterd
-            if (received_byte == SOM) 
+            if (received_byte == SOM)
             {
                 recvInProgress_Drive = true;
                 continue;
             }
 
             //receive data
-            if (recvInProgress_Drive == true) 
+            if (recvInProgress_Drive == true)
             {
                 if (received_byte == EOM)
                 {
@@ -96,27 +108,23 @@ void receive_data_Drive() {
     }
 }
 
-void update_JSON_obj_Drive(JsonDocument& JSON_Rover_to_Server) 
-{        
-    uint8_t delta_x = 0;
-    uint8_t delta_y = 0;
+void update_JSON_obj_Drive(JsonDocument &JSON_Rover_to_Server)
+{
+    uint8_t polar_depth = 12;
+    uint8_t polar_angle = 0;
     uint8_t delta_theta = 0;
 
-
     Serial.println("data received from Drive");
-    Serial.print("delta_x is: ");
-    Serial.println(delta_x);
-    Serial.print("delta_y is: ");
-    Serial.println(delta_y);
+    Serial.print("polar_depth is: ");
+    Serial.println(polar_depth);
+    Serial.print("polar_angle is: ");
+    Serial.println(polar_angle);
     Serial.print("delta_theta is: ");
     Serial.println(delta_theta);
-    
 
-
-    JSON_Rover_to_Server["delta_x"] = delta_x;
-    JSON_Rover_to_Server["delta_y"] = delta_y;
+    JSON_Rover_to_Server["polar_depth"] = polar_depth;
+    JSON_Rover_to_Server["polar_angle"] = polar_angle;
     JSON_Rover_to_Server["delta_theta"] = delta_theta;
- 
 }
 
 void receive_bytes_Vision()
@@ -127,30 +135,30 @@ void receive_bytes_Vision()
     char EOM = '}';
     char received_byte;
 
-    while(true)
+    while (true)
     {
-        while (Serial2.available() > 0) 
+        received_byte = SPI.transfer(0);
+        Serial.print("data received from vision: ");
+        Serial.println((int)received_byte);
+        //discard bytes until SOM is encounterd
+        if (received_byte == SOM)
         {
-            received_byte = SPI.transfer(0);
-            //discard bytes until SOM is encounterd
-            if (received_byte == SOM) 
-            {
-                recvInProgress_Vision = true;
-                continue;
-            }
+            recvInProgress_Vision = true;
+            continue;
+        }
 
-            //receive data
-            if (recvInProgress_Vision == true) 
+        //receive data
+        if (recvInProgress_Vision == true)
+        {
+            if (received_byte == EOM)
             {
-                if (received_byte == EOM)
-                {
-                    recvInProgress_Vision = false;
-                    counter_Vision = 0;
-                    return;
-                }
-                receivedData_Vision[counter_Vision] = received_byte;
-                counter_Vision++;
+                recvInProgress_Vision = false;
+                counter_Vision = 0;
+                Serial.println("return");
+                return;
             }
+            receivedData_Vision[counter_Vision] = received_byte;
+            counter_Vision++;
         }
     }
 }
@@ -170,36 +178,36 @@ void update_JSON_obj_Vision(JsonDocument &JSON_Rover_to_Server)
 {
     JsonArray Vision_data = JSON_Rover_to_Server.createNestedArray("balls");
 
-    for (int i = 0; i < 3*5; i += 3)
+    for (int i = 0; i < 3 * 5; i += 3)
     {
         JsonObject triplet = Vision_data.createNestedObject();
         triplet["colour"] = "red";
-        triplet["theta"] = receivedData_Vision[i + 1];
-        triplet["depth"] = receivedData_Vision[i + 2];
+        triplet["min_x"] = receivedData_Vision[i + 1];
+        triplet["max_x"] = receivedData_Vision[i + 2];
     }
 
     JsonArray depth = JSON_Rover_to_Server.createNestedArray("depth");
-    
+
     for (int i = 15; i < 95; i++)
     {
-        depth.add(receivedData_Vision[i]);
+        depth.add( ((int)receivedData_Vision[i]) & 255);
     }
-
 }
 
-void POST_data_Server(JsonDocument& JSON_Rover_to_Server, JsonDocument& JSON_Server_to_Rover) {
-    
+void POST_data_Server(JsonDocument &JSON_Rover_to_Server, JsonDocument &JSON_Server_to_Rover)
+{
+
     //Check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED)
+    if (WiFi.status() == WL_CONNECTED)
     {
         HTTPClient http;
         String serverPath = serverName;
 
         http.useHTTP10(true);
         // Domain name with URL path or IP address with path
-        http.begin(serverPath.c_str()); 
+        http.begin(serverPath.c_str());
         http.addHeader("Content-Type", "application/json");
-    
+
         // Send HTTP POST request
         String json;
         serializeJson(JSON_Rover_to_Server, json);
@@ -210,9 +218,10 @@ void POST_data_Server(JsonDocument& JSON_Rover_to_Server, JsonDocument& JSON_Ser
 
         DeserializationError error = deserializeJson(JSON_Server_to_Rover, http.getStream());
 
-        if (error) {
-        Serial.print(F("deserializeJson() failed: "));
-        Serial.println(error.f_str());
+        if (error)
+        {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
         }
 
         // Free resources
@@ -221,27 +230,26 @@ void POST_data_Server(JsonDocument& JSON_Rover_to_Server, JsonDocument& JSON_Ser
     else
     {
         Serial.println("WiFi Disconnected");
-    }   
+    }
 }
 
-void send_data_Drive(JsonDocument& JSON_Server_to_Rover) 
+void send_data_Drive(JsonDocument &JSON_Server_to_Rover)
 {
-    if (!JSON_Server_to_Rover.isNull()) 
+    if (!JSON_Server_to_Rover.isNull())
     {
         //extract values from JSON document
-        uint8_t delta_x = JSON_Server_to_Rover["delta_x"]; 
-        uint8_t delta_y = JSON_Server_to_Rover["delta_y"];
+        uint8_t polar_depth = JSON_Server_to_Rover["polar_depth"];
+        uint8_t polar_angle = JSON_Server_to_Rover["polar_angle"];
 
         Serial.println("data received from Server");
-        Serial.print("delta_x is: ");
-        Serial.println(delta_x);
-        Serial.print("delta_y is: ");
-        Serial.println(delta_y);
-        
+        Serial.print("polar_depth is: ");
+        Serial.println(polar_depth);
+        Serial.print("polar_angle is: ");
+        Serial.println(polar_angle);
 
         Serial2.write('{');
-        Serial2.write(delta_x); 
-        Serial2.write(delta_y);
+        Serial2.write(polar_depth);
+        Serial2.write(polar_angle);
         Serial2.write('}');
     }
     else
@@ -250,3 +258,38 @@ void send_data_Drive(JsonDocument& JSON_Server_to_Rover)
     }
 }
 
+void receive_data_Energy()
+{
+    static bool recvInProgress_Energy = false;
+    static byte counter_Energy = 0;
+    char SOM = '{';
+    char EOM = '}';
+    char received_byte;
+
+    while (true)
+    {
+        while (Serial2.available() > 0)
+        {
+            received_byte = Serial2.read();
+            //discard bytes until SOM is encounterd
+            if (received_byte == SOM)
+            {
+                recvInProgress_Energy = true;
+                continue;
+            }
+
+            //receive data
+            if (recvInProgress_Energy == true)
+            {
+                if (received_byte == EOM)
+                {
+                    recvInProgress_Energy = false;
+                    counter_Energy = 0;
+                    return;
+                }
+                receivedData_Energy[counter_Energy] = received_byte;
+                counter_Energy++;
+            }
+        }
+    }
+}
