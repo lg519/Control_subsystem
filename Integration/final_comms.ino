@@ -33,6 +33,9 @@ void setup()
     //Debug communication UART port
     Serial.begin(115200);
 
+    //Energy_communication UART port
+    Serial1.begin(9600, SERIAL_8N1, 18, 19);
+
     //Drive_communication UART port
     Serial2.begin(9600, SERIAL_8N1, 16, 17);
 
@@ -64,12 +67,15 @@ void loop()
     //receive_data_Drive();
     update_JSON_obj_Drive(JSON_Rover_to_Server);
 
+    receive_data_Energy();
+    update_JSON_obj_Drive(JSON_Rover_to_Server));
+
     receive_data_Vision();
     update_JSON_obj_Vision(JSON_Rover_to_Server);
 
     POST_data_Server(JSON_Rover_to_Server, JSON_Server_to_Rover);
 
-    send_data_Drive(JSON_Server_to_Rover);
+    send_data_Rover(JSON_Server_to_Rover);
 }
 
 void receive_data_Drive()
@@ -233,19 +239,26 @@ void POST_data_Server(JsonDocument &JSON_Rover_to_Server, JsonDocument &JSON_Ser
     }
 }
 
-void send_data_Drive(JsonDocument &JSON_Server_to_Rover)
+void send_data_Rover(JsonDocument &JSON_Server_to_Rover)
 {
     if (!JSON_Server_to_Rover.isNull())
     {
         //extract values from JSON document
         uint8_t polar_depth = JSON_Server_to_Rover["polar_depth"];
         uint8_t polar_angle = JSON_Server_to_Rover["polar_angle"];
+        uint8_t charge_flag = JSON_Server_to_Rover["charge_flag"];
 
         Serial.println("data received from Server");
         Serial.print("polar_depth is: ");
         Serial.println(polar_depth);
         Serial.print("polar_angle is: ");
         Serial.println(polar_angle);
+        Serial.print("charge_flag is: ");
+        Serial.println(charge_flag);
+
+        Serial1.write('{');
+        Serial1.write(charge_flag);
+        Serial1.write('}');
 
         Serial2.write('{');
         Serial2.write(polar_depth);
@@ -292,4 +305,16 @@ void receive_data_Energy()
             }
         }
     }
+}
+
+void update_JSON_obj_Energy(JsonDocument &JSON_Rover_to_Server)
+{
+    uint8_t SOC = receivedData_Energy[0];
+    uint8_t SOH = receivedData_Energy[1];
+    uint8_t BatteryWarning_flag = receivedData_Energy[2];
+
+
+    JSON_Rover_to_Server["SOC"] = SOC;
+    JSON_Rover_to_Server["SOH"] = SOH;
+    JSON_Rover_to_Server["BatteryWarning_flag"] = BatteryWarning_flag;
 }
