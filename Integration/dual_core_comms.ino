@@ -14,7 +14,7 @@ char receivedData_Drive[3];
 
 const char *ssid = "max";
 const char *password = "12345678";
-String serverName = "http://10.42.0.1:5000/rover_data";
+String serverName = "http://10.42.0.1:6000/rover_data";
 
 
 //SPI settings
@@ -26,7 +26,7 @@ char receivedData_Vision[3 * 5 + 80]; //recive 5 triplets and 80 bytes array { c
 
 //Energy_communication setup
 char receivedData_Energy[3];
-char chargeFlag_Energy;
+char charge_flag = 0;
 
 void setup()
 {
@@ -34,7 +34,7 @@ void setup()
     Serial.begin(115200);
 
     //Energy_communication UART port
-    Serial1.begin(9600, SERIAL_8N1, 22, 23);
+    Serial1.begin(115200, SERIAL_8N1, 22, 23);
 
     //Drive_communication UART port
     Serial2.begin(9600, SERIAL_8N1, 16, 17);
@@ -74,7 +74,7 @@ void Task1code(void *parameter)
         StaticJsonDocument<2048> JSON_Rover_to_Server;
         StaticJsonDocument<96> JSON_Server_to_Rover;
 
-        receive_data_Drive();
+        //receive_data_Drive();
         update_JSON_obj_Drive(JSON_Rover_to_Server);
 
         receive_data_Energy();
@@ -95,6 +95,7 @@ void Task2code(void *parameter)
     for (;;)
     {
         send_energy_data_Rover();
+        delay(300);
     }
 }
 
@@ -281,7 +282,7 @@ void send_position_data_Rover(JsonDocument &JSON_Server_to_Rover)
         Serial.print("polar_angle is: ");
         Serial.println(polar_angle);
         Serial.print("charge_flag is: ");
-        Serial.println(charge_flag);
+        Serial.println((int)charge_flag);
        
         //send data to Drive
         Serial2.write('{');
@@ -298,7 +299,8 @@ void send_position_data_Rover(JsonDocument &JSON_Server_to_Rover)
 void send_energy_data_Rover()
 {
     //send data to Energy
-    Serial1.write(charge_flag);
+    Serial.println("send data to smartin");
+    Serial1.write('a');
 }
 
 /////////// Energy communication helper functions ////////////
@@ -345,10 +347,10 @@ void update_JSON_obj_Energy(JsonDocument &JSON_Rover_to_Server)
     uint8_t SOH = receivedData_Energy[1];
     uint8_t BatteryWarning_flag = receivedData_Energy[2];
 
-    // Serial.println("data from energy:");
-    // Serial.print(receivedData_Energy[0]);
-    // Serial.print(receivedData_Energy[1]);
-    // Serial.print(receivedData_Energy[2]);
+    Serial.println("data from energy:");
+    Serial.println((int)receivedData_Energy[0]);
+    Serial.println((int)receivedData_Energy[1]);
+    Serial.println((int)receivedData_Energy[2]);
 
     JSON_Rover_to_Server["SOC"] = SOC;
     JSON_Rover_to_Server["SOH"] = SOH;
