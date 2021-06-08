@@ -49,8 +49,8 @@ def reconstruct_path(came_from, start, goal):
     path.reverse() # optional
     return path
     
-start = (8, 7)
-goal = (17, 2)
+start = (0, 0)
+goal = (11, 12)
 
 g = SquareGrid(30, 15)
 DIAGRAM1_WALLS = [from_id_width(node, width=30) for node in [21,22,51,52,81,82,93,94,111,112,123,124,133,134,141,142,153,154,163,164,171,172,173,174,175,183,184,193,194,201,202,203,204,205,213,214,223,224,243,244,253,254,273,274,283,284,303,304,313,314,333,334,343,344,373,374,403,404,433,434]]

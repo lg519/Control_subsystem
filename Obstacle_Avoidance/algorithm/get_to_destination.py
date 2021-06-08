@@ -38,7 +38,7 @@ DIAGRAM1_WALLS = [from_id_width(node, width=30) for node in [21,22,51,52,81,82,9
 g.walls = DIAGRAM1_WALLS
 
 start = (8, 7)
-goal = (17, 2)
+goal = (18, 7)
 parents = breadth_first_search(g, start, goal)
 
 draw_grid(g, point_to=parents, start=start, goal=goal)
