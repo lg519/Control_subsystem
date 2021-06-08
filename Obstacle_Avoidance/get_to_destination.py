@@ -14,7 +14,6 @@ class Queue:
     def get(self):
         return self.elements.popleft()
 
-
 def breadth_first_search(graph, start, goal):
     frontier = Queue()
     frontier.put(start)
