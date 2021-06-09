@@ -1,5 +1,5 @@
 import math
-
+import random
 ############### CONVERSION #############
 # def map_to_coor(coor):
 #     (x,y)= coor
@@ -56,7 +56,7 @@ class Map:
     
     def neighbors(self, node):
         (x, y) = node
-        dirs = [[1, 0], [0, 1], [-1, 0], [0, -1],[1,1],[1,-1],[-1,1],[-1,-1]]
+        dirs = [[1, 0], [0, 1], [-1, 0], [0, -1]]
         result = []
         neighbors_list = []
         for dir in dirs:
@@ -141,7 +141,10 @@ def reconstruct_path(came_from, start, goal):
 
 
 #########################################################
-balls = [Ball(15,math.pi),Ball(13,0)]
+balls = [Ball(15,math.pi),Ball(13,0),Ball(45,math.pi/2)]
+
+for i in range(50):
+    balls.append(Ball(random.randint(1,110),(math.pi/180)*random.randint(0,360)))
 
 g = Map(300,300)
 
