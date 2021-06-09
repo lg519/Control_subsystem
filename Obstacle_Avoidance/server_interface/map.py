@@ -5,7 +5,9 @@ class Ball:
         self.depth = depth
         self.theta = theta
         '''converts depth,theta -> (x,y)'''
-        self.cartesian = self.createCartesian(depth,theta)
+        #self.cartesian = self.createCartesian(depth,theta)
+        #TODO remove, testing purpuses only
+        self.cartesian = (depth,theta)
     
     def createCartesian(self, length, angle):
             '''Find the cartesian coordinates given the polar coordiantes'''
@@ -50,7 +52,11 @@ class Map:
         return result
     
     def add_ball_obstacle(self, ball):
-        pass
+        (x,y) = ball.cartesian
+        for i in range(x-2,x+3):
+            for j in range(y-2,y+3):
+                if self.in_bounds((i,j)):
+                    self.obstacle.append((i,j))
 
 def draw_grid(graph, **style):
     print("___" * graph.width)
@@ -68,5 +74,8 @@ def draw_tile(graph, node, style):
     if node in graph.obstacle: r = " # "
     return r
 
-test = Ball(1,0)
-print(test.cartesian)
+
+g = Map(30, 15)
+tmp = Ball(0,0)
+g.add_ball_obstacle(tmp)
+draw_grid(g)
