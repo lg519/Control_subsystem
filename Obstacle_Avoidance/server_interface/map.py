@@ -1,31 +1,44 @@
 import math
 
+############### CONVERSION #############
+def map_to_coor():
+    (x,y)= coor
+    coor[0] += 150
+    coor[1] += 150
+
+def coor_to_map(coor):
+    (x,y)= coor
+    coor[0] = math.floor(coor[0]) + 150
+    coor[1] = math.floor(coor[1]) + 150
+    return(coor)
+
+############### BALL ##############
 class Ball:
     def __init__(self,depth,theta):
         self.depth = depth
         self.theta = theta
         '''converts depth,theta -> (x,y)'''
-        #self.cartesian = self.createCartesian(depth,theta)
-        #TODO remove, testing purpuses only
-        self.cartesian = (depth,theta)
+        self.cartesian = coor_to_map (self.createCartesian(depth,theta))
     
     def createCartesian(self, length, angle):
             '''Find the cartesian coordinates given the polar coordiantes'''
             if angle < math.pi / 2:
-                return (math.sin(angle)*length, math.cos(angle)*length)
+                return [math.sin(angle)*length, math.cos(angle)*length]
             elif angle < math.pi:
                 angle = angle - math.pi / 2
-                return (math.cos(angle)*length, -1 * math.sin(angle)*length)
+                return [math.cos(angle)*length, -1 * math.sin(angle)*length]
             elif angle < 3 * math.pi / 2:
                 angle = angle - math.pi
                 print("Angle",angle)
                 print(math.sin(angle)*length)
-                return (-1 * math.sin(angle)*length, -1 * math.cos(angle)*length)
+                return [-1 * math.sin(angle)*length, -1 * math.cos(angle)*length]
             angle = angle - 3 * math.pi / 2
             print("Angle2",angle)
             print(math.sin(angle)*length)
-            return (-1 * math.cos(angle)*length, math.sin(angle)*length)
+            return [-1 * math.cos(angle)*length, math.sin(angle)*length]
 
+
+############ MAP ############
 class Map:
     def __init__(self, width, height):
         self.width = width
@@ -75,7 +88,13 @@ def draw_tile(graph, node, style):
     return r
 
 
-g = Map(30, 15)
-tmp = Ball(0,0)
-g.add_ball_obstacle(tmp)
+
+
+balls = [Ball(15,math.pi),Ball(13,0),Ball(50,math.pi/2)]
+
+g = Map(300,300)
+
+for ball in balls:
+    g.add_ball_obstacle(ball)
+
 draw_grid(g)
