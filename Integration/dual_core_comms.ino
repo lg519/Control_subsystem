@@ -44,18 +44,18 @@ void setup()
     SPI.begin();
 
     //Server_communication WiFi connection
-    WiFi.begin(ssid, password);
-    Serial.println("Connecting");
+    // WiFi.begin(ssid, password);
+    // Serial.println("Connecting");
 
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-        Serial.print(".");
-    }
+    // while (WiFi.status() != WL_CONNECTED)
+    // {
+    //     delay(500);
+    //     Serial.print(".");
+    // }
 
-    Serial.println("");
-    Serial.print("Connected to WiFi network with IP Address: ");
-    Serial.println(WiFi.localIP());
+    // Serial.println("");
+    // Serial.print("Connected to WiFi network with IP Address: ");
+    // Serial.println(WiFi.localIP());
 
     //dual_core setup
     xTaskCreatePinnedToCore(Task1code, "Task1", 10000, NULL, 1, NULL,  0); 
@@ -77,15 +77,16 @@ void Task1code(void *parameter)
         //receive_data_Drive();
         update_JSON_obj_Drive(JSON_Rover_to_Server);
 
-        receive_data_Energy();
+        //receive_data_Energy();
         update_JSON_obj_Energy(JSON_Rover_to_Server);
 
-        //receive_data_Vision();
-        //update_JSON_obj_Vision(JSON_Rover_to_Server);
+        receive_data_Vision();
+        update_JSON_obj_Vision(JSON_Rover_to_Server);
 
-        POST_data_Server(JSON_Rover_to_Server, JSON_Server_to_Rover);
+        //POST_data_Server(JSON_Rover_to_Server, JSON_Server_to_Rover);
 
-        send_position_data_Rover(JSON_Server_to_Rover);
+        //send_position_data_Rover(JSON_Server_to_Rover);
+        delay(1000);
     }
 }
 
@@ -94,7 +95,7 @@ void Task2code(void *parameter)
 { 
     for (;;)
     {
-        send_energy_data_Rover();
+        //send_energy_data_Rover();
         delay(300);
     }
 }
@@ -166,10 +167,13 @@ void receive_bytes_Vision()
     char EOM = '}';
     char received_byte;
 
+    Serial.println("data received from vision: ");
     while (true)
     {
         received_byte = SPI.transfer(0);
-        Serial.print("data received from vision: ");
+        
+        //
+        if(received_byte == 0) continue;
         Serial.println((int)received_byte);
         //discard bytes until SOM is encounterd
         if (received_byte == SOM)
@@ -186,6 +190,7 @@ void receive_bytes_Vision()
                 recvInProgress_Vision = false;
                 counter_Vision = 0;
                 Serial.println("return");
+                Serial.println("end of data received from vision");
                 return;
             }
             receivedData_Vision[counter_Vision] = received_byte;
@@ -212,16 +217,22 @@ void update_JSON_obj_Vision(JsonDocument &JSON_Rover_to_Server)
     for (int i = 0; i < 3 * 5; i += 3)
     {
         JsonObject triplet = Vision_data.createNestedObject();
-        triplet["colour"] = "red";
-        triplet["min_x"] = receivedData_Vision[i + 1];
-        triplet["max_x"] = receivedData_Vision[i + 2];
+        String colour; 
+        if(receivedData_Vision[i] == 1) colour = "pink";
+        else if(receivedData_Vision[i] == 2) colour = "green";
+        else if(receivedData_Vision[i] == 3) colour = "black";
+        else if(receivedData_Vision[i] == 4) colour = "blue";
+        else if(receivedData_Vision[i] == 5) colour = "orange";
+        triplet["colour"] = colour;
+        triplet["min_x"] = (int)((unsigned char)receivedData_Vision[i + 1]);
+        triplet["max_x"] = (int)((unsigned char)receivedData_Vision[i + 2]);
     }
 
     JsonArray depth = JSON_Rover_to_Server.createNestedArray("depth");
 
     for (int i = 15; i < 95; i++)
     {
-        depth.add( ((int)receivedData_Vision[i]) & 255);
+        depth.add((int)((unsigned char)receivedData_Vision[i]));
     }
 }
 
