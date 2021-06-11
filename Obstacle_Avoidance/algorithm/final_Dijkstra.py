@@ -13,7 +13,7 @@ class priority_queue:
     def pop(self):
         return heapq.heappop(self.elements)[1]
 
-def dijkstra_search(graph, start, goal):
+def best_path(graph, start, goal):
     queue = priority_queue()
     queue.push(start, 0)
     predecessor = {}
@@ -23,28 +23,30 @@ def dijkstra_search(graph, start, goal):
     predecessor[start] = None
     costs[start] = 0
     
-    while not queue.is_empty():
-        current = queue.pop()
+    while True:
+        
+        if queue.is_empty():
+            break
+
+        current = queue.pop()     
         
         if current == goal:
             break
         
         for next in graph.neighbors(current):
-            new_cost = costs[current] + graph.cost(current, next)
-            if next not in costs or new_cost < costs[next]:
-                costs[next] = new_cost
-                priority = new_cost
+            current_cost = costs[current] + graph.cost(current, next)
+            if next not in costs or current_cost < costs[next]:
+                costs[next] = current_cost
+                priority = current_cost
                 queue.put(next, priority)
                 predecessor[next] = current
     
     return predecessor, costs
 
-def reconstruct_path(predecessor, start, goal):
+def next_move(predecessor, start, goal):
     current = goal
     path = []
     while current != start:
         path.append(current)
-        current = predecessor[current]
-    path.append(start) 
-    path.reverse() 
-    return path
+        current = predecessor[current] 
+    return path[-1]
