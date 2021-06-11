@@ -5,13 +5,12 @@
 #include <SPI.h>
 
 //Drive_communication setup
-char receivedData_Drive[3];
+char receivedData_Drive[5];
 
 //Server_communication setup
 //const char *ssid = "DESKTOP-SIM2NC1 1364";
 //const char *password = "o9O)5498";
 //String serverName = "https://rover-flask-server-6w7fs.ondigitalocean.app/api/rover_data";
-
 const char *ssid = "max";
 const char *password = "12345678";
 String serverName = "http://10.42.0.1:6000/rover_data";
@@ -27,6 +26,7 @@ char receivedData_Vision[3 * 5 + 80]; //recive 5 triplets and 80 bytes array { c
 //Energy_communication setup
 char receivedData_Energy[3];
 char charge_flag = 0;
+char current_drawn[2];
 
 void setup()
 {
@@ -144,6 +144,10 @@ void update_JSON_obj_Drive(JsonDocument &JSON_Rover_to_Server)
     uint8_t polar_depth = receivedData_Drive[0];
     uint8_t polar_angle = receivedData_Drive[1];
     uint8_t delta_theta = receivedData_Drive[2];
+    
+    //update global variable for Energy communication
+    current_drawn[0] = receivedData_Drive[3];
+    current_drawn[1] = receive_data_Drive[4];
 
     Serial.println("data received from Drive");
     Serial.print("polar_depth is: ");
@@ -309,9 +313,11 @@ void send_position_data_Rover(JsonDocument &JSON_Server_to_Rover)
 
 void send_energy_data_Rover()
 {
-    //send data to Energy
-    Serial.println("send data to smartin");
+    //send charge flag
     Serial1.write('a');
+    //send current_drawn data
+    Serial1.write(current_drawn[0]);
+    Serial1.write(current_drawn[1]);
 }
 
 /////////// Energy communication helper functions ////////////
