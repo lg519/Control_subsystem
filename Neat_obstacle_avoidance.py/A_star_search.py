@@ -120,8 +120,8 @@ def reconstruct_path(came_from, start, goal):
     while current != start:
         path.append(current)
         current = came_from[current]
-    path.append(start) # optional
-    path.reverse() # optional
+    path.append(start)
+    path.reverse()
     return path
 
 def a_star_search(graph, start, goal):
