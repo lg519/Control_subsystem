@@ -1,5 +1,6 @@
 import math
 import random
+import time
 ############### CONVERSION #############
 # def map_to_coor(coor):
 #     (x,y)= coor
@@ -148,7 +149,29 @@ def a_star_search(graph, start, goal):
                 open_set.put(neighbor, priority)
                 came_from[neighbor] = current
 
-
+def Dijkstra_search(graph, start, goal):
+    open_set = PriorityQueue()
+    open_set.put(start, 0)
+    came_from = {} #map containing best path from goal to start
+    g_score = {} #map containing relative score of each node. Nodes with lowest score have priority
+   
+   
+    came_from[start] = None
+    g_score[start] = 0
+    
+    while not open_set.empty():
+        current = open_set.get()
+        
+        if current == goal:
+            return reconstruct_path(came_from, start, goal)
+        
+        for neighbor in graph.neighbors(current):
+            tentative_g_score = g_score[current] + graph.cost(current,neighbor) 
+            if neighbor not in g_score or tentative_g_score < g_score[neighbor]:
+                g_score[neighbor] = tentative_g_score
+                priority = tentative_g_score
+                open_set.put(neighbor, priority)
+                came_from[neighbor] = current
 
 ############# EXAMPLE ################
 
@@ -156,7 +179,7 @@ def a_star_search(graph, start, goal):
 g = Map(300,300)    
 
 # add obstacles to map
-for i in range(50):  
+for i in range(150):  
     g.add_ball_obstacle(Ball(random.randint(1,110),(math.pi/180)*random.randint(0,360)))
 
 # set destination
@@ -165,5 +188,10 @@ goal = (g_x,g_y)
 
 
 #came_from, cost_so_far = a_star_search(g, g.start, goal)
+begin= time.process_time()
+for i in range(1000):
+    a_star_search(g, g.start, goal)
+end = time.process_time()
 
-draw_grid(g, path = a_star_search(g, g.start, goal))
+print("time:",end-begin)
+

@@ -315,7 +315,7 @@ void send_position_data_Rover(JsonDocument &JSON_Server_to_Rover)
 void send_energy_data_Rover()
 {
     //send charge flag
-    Serial1.write('a');
+    Serial1.write(charge_flag);
     //send current_drawn data
     Serial1.write(current_drawn[0]);
     Serial1.write(current_drawn[1]);
