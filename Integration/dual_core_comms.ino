@@ -77,10 +77,10 @@ void Task1code(void *parameter)
         receive_data_Drive();
         update_JSON_obj_Drive(JSON_Rover_to_Server);
 
-        //receive_data_Energy();
+        receive_data_Energy();
         update_JSON_obj_Energy(JSON_Rover_to_Server);
 
-        //receive_data_Vision();
+        receive_data_Vision();
         update_JSON_obj_Vision(JSON_Rover_to_Server);
 
         POST_data_Server(JSON_Rover_to_Server, JSON_Server_to_Rover);
@@ -94,7 +94,7 @@ void Task2code(void *parameter)
 { 
     for (;;)
     {
-        //send_energy_data_Rover();
+        send_energy_data_Rover();
         delay(1);
     }
 }
